@@ -10,15 +10,8 @@ import Cocoa
 
 class ViewController: NSViewController {
 
-    let ASCII = [
-        32 : " ",
-        33 : "!",
-        34 : "\"",
-        35 : "#",
-        36 : "$",
-        37 : "%"
-    ]
     @IBOutlet var textView: NSTextView!
+    @IBOutlet weak var textLabel: NSTextField!
     var charact = ""
     var lastString = ""
     
@@ -37,7 +30,7 @@ class ViewController: NSViewController {
             return theEvent
         }
         
-        
+        textLabel.hidden = true
     }
     
     override var representedObject: AnyObject? {
@@ -81,4 +74,66 @@ class ViewController: NSViewController {
         lastString = textView.string!
     }
     
+    @IBAction func runButton(sender: AnyObject) {
+        textLabel.hidden = false
+        var currentMemory = 0
+        var currentLoop = 0
+        var loopPosition = [0]
+        var result = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        let string = textView.string!
+        
+        for var i = 0; i < string.characters.count; i++ {
+            let str = String(string[i] as Character)
+            if str == "+" {
+                result[currentMemory]++
+            } else if str == "-" {
+                result[currentMemory]--
+            } else if str == "." {
+                textLabel.stringValue = textLabel.stringValue + "\(Character(UnicodeScalar(result[currentMemory])))"
+            } else if str == "," {
+                
+            } else if str == ">" {
+                currentMemory++
+            } else if str == "<" {
+                currentMemory--
+            } else if str == "[" {
+                currentLoop++
+                if loopPosition.count - 1 < currentLoop {
+                    loopPosition += [i]
+                } else {
+                    loopPosition[currentLoop] = i
+                }
+            } else if str == "]" {
+                if result[currentMemory] == 0 {
+                    loopPosition[currentLoop] = 0
+                    if currentLoop != 0 {currentLoop--}
+                } else {
+                    i = loopPosition[currentLoop] - 1
+                }
+            }
+        }
+    }
+    
+    @IBAction func stopButton(sender: AnyObject) {
+        textLabel.stringValue = ""
+        textLabel.hidden = true
+    }
+    
+}
+
+extension String {
+    
+    subscript (i: Int) -> Character {
+        return self[self.startIndex.advancedBy(i)]
+    }
+    
+    subscript (i: Int) -> String {
+        return String(self[i] as Character)
+    }
+    
+    subscript (r: Range<Int>) -> String {
+        let start = startIndex.advancedBy(r.startIndex)
+        let end = start.advancedBy(r.endIndex - r.startIndex)
+        return self[Range(start: start, end: end)]
+    }
 }
