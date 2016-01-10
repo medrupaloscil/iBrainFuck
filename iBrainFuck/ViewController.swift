@@ -15,6 +15,8 @@ class ViewController: NSViewController {
         33 : "!",
         34 : "\"",
         35 : "#",
+        36 : "$",
+        37 : "%"
     ]
     @IBOutlet var textView: NSTextView!
     var charact = ""
