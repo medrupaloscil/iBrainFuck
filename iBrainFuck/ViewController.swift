@@ -33,45 +33,11 @@ class ViewController: NSViewController {
         textLabel.hidden = true
     }
     
-    override var representedObject: AnyObject? {
-        didSet {
-            // Update the view, if already loaded.
-        }
-    }
-    
     override func keyDown(theEvent:NSEvent) {
         charact = theEvent.charactersIgnoringModifiers!
-        let keyCode = theEvent.keyCode
-        if  keyCode != 36 && keyCode != 48 && keyCode != 51 && keyCode != 53 && keyCode != 123 && keyCode != 124 && keyCode != 125 && keyCode != 126 {
-            _ = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: Selector("deleteLast"), userInfo: nil, repeats: false)
+        if charact == "-" {
+            textView.string = textView.string!
         }
-    }
-    
-    
-    override func flagsChanged(theEvent: NSEvent) {
-        /*switch theEvent.modifierFlags.intersect(.DeviceIndependentModifierFlagsMask) {
-        case NSEventModifierFlags.ShiftKeyMask :
-            print("shift key is pressed")
-        case NSEventModifierFlags.ControlKeyMask:
-            print("control key is pressed")
-        case NSEventModifierFlags.AlternateKeyMask :
-            print("option key is pressed")
-        case NSEventModifierFlags.CommandKeyMask:
-            print(theEvent)
-        default:
-            print("")
-        }*/
-    }
-
-    func deleteLast() {
-        if charact != ">" && charact != "<" && charact != "." && charact != "," && charact != "+" && charact != "[" && charact != "]" {
-            if charact == "-" {
-                textView.string = textView.string!
-            } else {
-                textView.string = lastString
-            }
-        }
-        lastString = textView.string!
     }
     
     @IBAction func runButton(sender: AnyObject) {
@@ -81,36 +47,45 @@ class ViewController: NSViewController {
         var loopPosition = [0]
         var result = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         let string = textView.string!
+        var i = 0
         
-        for var i = 0; i < string.characters.count; i++ {
+        while i < string.characters.count {
             let str = String(string[i] as Character)
-            if str == "+" {
-                result[currentMemory]++
-            } else if str == "-" {
-                result[currentMemory]--
-            } else if str == "." {
+            
+            switch str {
+            case "+":
+                result[currentMemory] += 1
+            case "-":
+                result[currentMemory] -= 1
+            case ".":
                 textLabel.stringValue = textLabel.stringValue + "\(Character(UnicodeScalar(result[currentMemory])))"
-            } else if str == "," {
-                
-            } else if str == ">" {
-                currentMemory++
-            } else if str == "<" {
-                currentMemory--
-            } else if str == "[" {
-                currentLoop++
+            case ",":
+                print("not available")
+            case ">":
+                currentMemory += 1
+            case "<":
+                currentMemory -= 1
+            case "[":
+                currentLoop += 1
                 if loopPosition.count - 1 < currentLoop {
                     loopPosition += [i]
                 } else {
                     loopPosition[currentLoop] = i
                 }
-            } else if str == "]" {
+                break
+            case "]":
                 if result[currentMemory] == 0 {
                     loopPosition[currentLoop] = 0
-                    if currentLoop != 0 {currentLoop--}
+                    if currentLoop != 0 {currentLoop -= 1}
                 } else {
                     i = loopPosition[currentLoop] - 1
                 }
+                break
+            default:
+                print("Not a brainfuck character")
             }
+            
+            i += 1
         }
     }
     
@@ -134,6 +109,6 @@ extension String {
     subscript (r: Range<Int>) -> String {
         let start = startIndex.advancedBy(r.startIndex)
         let end = start.advancedBy(r.endIndex - r.startIndex)
-        return self[Range(start: start, end: end)]
+        return self[start..<end]
     }
 }
