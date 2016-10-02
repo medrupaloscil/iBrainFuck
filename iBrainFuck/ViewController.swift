@@ -10,8 +10,9 @@ import Cocoa
 
 class ViewController: NSViewController {
 
+    
     @IBOutlet var textView: NSTextView!
-    @IBOutlet weak var textLabel: NSTextField!
+    @IBOutlet var textLabel: NSTextView!
     var charact = ""
     var lastString = ""
     
@@ -20,35 +21,27 @@ class ViewController: NSViewController {
 
         // Do any additional setup after loading the view.
         textView.textColor = NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1)
-        NSEvent.addLocalMonitorForEventsMatchingMask(.KeyDownMask) { (aEvent) -> NSEvent! in
-            self.keyDown(aEvent)
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { (aEvent) -> NSEvent! in
+            self.keyDown(with: aEvent)
             return aEvent
         }
         
-        NSEvent.addLocalMonitorForEventsMatchingMask(.FlagsChangedMask) { (theEvent) -> NSEvent! in
-            self.flagsChanged(theEvent)
+        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { (theEvent) -> NSEvent! in
+            self.flagsChanged(with: theEvent)
             return theEvent
         }
-        
-        textLabel.hidden = true
     }
     
-    override var representedObject: AnyObject? {
-        didSet {
-            // Update the view, if already loaded.
-        }
-    }
-    
-    override func keyDown(theEvent:NSEvent) {
+    override func keyDown(with theEvent:NSEvent) {
         charact = theEvent.charactersIgnoringModifiers!
         let keyCode = theEvent.keyCode
         if  keyCode != 36 && keyCode != 48 && keyCode != 51 && keyCode != 53 && keyCode != 123 && keyCode != 124 && keyCode != 125 && keyCode != 126 {
-            _ = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: Selector("deleteLast"), userInfo: nil, repeats: false)
+            _ = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(ViewController.deleteLast), userInfo: nil, repeats: false)
         }
     }
     
     
-    override func flagsChanged(theEvent: NSEvent) {
+    override func flagsChanged(with theEvent: NSEvent) {
         /*switch theEvent.modifierFlags.intersect(.DeviceIndependentModifierFlagsMask) {
         case NSEventModifierFlags.ShiftKeyMask :
             print("shift key is pressed")
@@ -67,37 +60,38 @@ class ViewController: NSViewController {
         if charact != ">" && charact != "<" && charact != "." && charact != "," && charact != "+" && charact != "[" && charact != "]" {
             if charact == "-" {
                 textView.string = textView.string!
-            } else {
-                textView.string = lastString
             }
         }
         lastString = textView.string!
     }
     
-    @IBAction func runButton(sender: AnyObject) {
-        textLabel.hidden = false
+    @IBAction func runButton(_ sender: AnyObject) {
+        textLabel.string = ""
         var currentMemory = 0
         var currentLoop = 0
         var loopPosition = [0]
-        var result = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        var result = [0]
         let string = textView.string!
-        
-        for var i = 0; i < string.characters.count; i++ {
+        var i = 0
+        while i != string.characters.count {
             let str = String(string[i] as Character)
             if str == "+" {
-                result[currentMemory]++
+                result[currentMemory] += 1
             } else if str == "-" {
-                result[currentMemory]--
+                result[currentMemory] -= 1
             } else if str == "." {
-                textLabel.stringValue = textLabel.stringValue + "\(Character(UnicodeScalar(result[currentMemory])))"
+                textLabel.string = textLabel.string! + "\(String(describing: UnicodeScalar(result[currentMemory])!))"
             } else if str == "," {
                 
             } else if str == ">" {
-                currentMemory++
+                currentMemory += 1
+                if result.count == currentMemory {
+                    result.append(0)
+                }
             } else if str == "<" {
-                currentMemory--
+                currentMemory -= 1
             } else if str == "[" {
-                currentLoop++
+                currentLoop += 1
                 if loopPosition.count - 1 < currentLoop {
                     loopPosition += [i]
                 } else {
@@ -106,17 +100,34 @@ class ViewController: NSViewController {
             } else if str == "]" {
                 if result[currentMemory] == 0 {
                     loopPosition[currentLoop] = 0
-                    if currentLoop != 0 {currentLoop--}
+                    if currentLoop != 0 {currentLoop -= 1}
                 } else {
                     i = loopPosition[currentLoop] - 1
                 }
             }
+            
+            i += 1
         }
     }
     
-    @IBAction func stopButton(sender: AnyObject) {
-        textLabel.stringValue = ""
-        textLabel.hidden = true
+    func saveFile() {
+        let file = "file.bfk" //this is the file. we will write to and read from it
+        
+        let text = textView.string! //just a text
+        
+        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            
+            let path = dir.appendingPathComponent(file)
+            print(path)
+            
+            //writing
+            do {
+                try text.write(to: path, atomically: false, encoding: String.Encoding.utf8)
+            }
+            catch {
+                print(error)
+            }
+        }
     }
     
 }
@@ -124,7 +135,7 @@ class ViewController: NSViewController {
 extension String {
     
     subscript (i: Int) -> Character {
-        return self[self.startIndex.advancedBy(i)]
+        return self[self.characters.index(self.startIndex, offsetBy: i)]
     }
     
     subscript (i: Int) -> String {
@@ -132,8 +143,8 @@ extension String {
     }
     
     subscript (r: Range<Int>) -> String {
-        let start = startIndex.advancedBy(r.startIndex)
-        let end = start.advancedBy(r.endIndex - r.startIndex)
-        return self[Range(start: start, end: end)]
+        let start = characters.index(startIndex, offsetBy: r.lowerBound)
+        let end = self.index(start, offsetBy: r.upperBound - r.lowerBound)
+        return self[(start ..< end)]
     }
 }
