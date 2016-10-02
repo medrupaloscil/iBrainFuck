@@ -62,7 +62,6 @@ class ViewController: NSViewController {
                 textView.string = textView.string!
             }
         }
-        lastString = textView.string!
     }
     
     @IBAction func runButton(_ sender: AnyObject) {
@@ -73,37 +72,43 @@ class ViewController: NSViewController {
         var result = [0]
         let string = textView.string!
         var i = 0
+        
         while i != string.characters.count {
             let str = String(string[i] as Character)
-            if str == "+" {
+            switch str {
+            case "+":
                 result[currentMemory] += 1
-            } else if str == "-" {
+            case "-":
                 result[currentMemory] -= 1
-            } else if str == "." {
-                textLabel.string = textLabel.string! + "\(String(describing: UnicodeScalar(result[currentMemory])!))"
-            } else if str == "," {
-                
-            } else if str == ">" {
+            case ".":
+                textLabel.string = textLabel.string! + "\(Character(UnicodeScalar(result[currentMemory])!))"
+            case ",":
+                print("not available")
+            case ">":
                 currentMemory += 1
                 if result.count == currentMemory {
                     result.append(0)
                 }
-            } else if str == "<" {
+            case "<":
                 currentMemory -= 1
-            } else if str == "[" {
+            case "[":
                 currentLoop += 1
                 if loopPosition.count - 1 < currentLoop {
                     loopPosition += [i]
                 } else {
                     loopPosition[currentLoop] = i
                 }
-            } else if str == "]" {
+                break
+            case "]":
                 if result[currentMemory] == 0 {
                     loopPosition[currentLoop] = 0
                     if currentLoop != 0 {currentLoop -= 1}
                 } else {
                     i = loopPosition[currentLoop] - 1
                 }
+                break
+            default:
+                print("Not a brainfuck character")
             }
             
             i += 1
@@ -143,7 +148,7 @@ extension String {
     }
     
     subscript (r: Range<Int>) -> String {
-        let start = characters.index(startIndex, offsetBy: r.lowerBound)
+        let start = self.characters.index(startIndex, offsetBy: r.lowerBound)
         let end = self.index(start, offsetBy: r.upperBound - r.lowerBound)
         return self[(start ..< end)]
     }
