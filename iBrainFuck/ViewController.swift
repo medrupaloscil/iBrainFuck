@@ -6,21 +6,44 @@
 //  Copyright © 2016 medrupaloscil. All rights reserved.
 //
 
+/*
+ Hello world
+ ++++++++++
+ [
+	>+++++++
+	>++++++++++
+	>+++
+	>+
+	<<<<-
+ ]
+ >++.
+ >+.
+ +++++++.
+ .
+ +++.
+ >++.
+ <<+++++++++++++++.
+ >.
+ +++.
+ ------.
+ --------.
+ >+.
+*/
+
 import Cocoa
+import Darwin
 
 class ViewController: NSViewController {
-
     
     @IBOutlet var textView: NSTextView!
     @IBOutlet var textLabel: NSTextView!
-    var charact = ""
-    var lastString = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
         textView.textColor = NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1)
+        textLabel.textColor = NSColor.white
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { (aEvent) -> NSEvent! in
             self.keyDown(with: aEvent)
             return aEvent
@@ -33,13 +56,11 @@ class ViewController: NSViewController {
     }
     
     override func keyDown(with theEvent:NSEvent) {
-        charact = theEvent.charactersIgnoringModifiers!
         let keyCode = theEvent.keyCode
         if  keyCode != 36 && keyCode != 48 && keyCode != 51 && keyCode != 53 && keyCode != 123 && keyCode != 124 && keyCode != 125 && keyCode != 126 {
-            _ = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(ViewController.deleteLast), userInfo: nil, repeats: false)
+            _ = Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: #selector(ViewController.syntaxColor), userInfo: nil, repeats: false)
         }
     }
-    
     
     override func flagsChanged(with theEvent: NSEvent) {
         /*switch theEvent.modifierFlags.intersect(.DeviceIndependentModifierFlagsMask) {
@@ -56,12 +77,44 @@ class ViewController: NSViewController {
         }*/
     }
 
-    func deleteLast() {
-        if charact != ">" && charact != "<" && charact != "." && charact != "," && charact != "+" && charact != "[" && charact != "]" {
-            if charact == "-" {
-                textView.string = textView.string!
+    func syntaxColor() {
+        
+        let selectedRange = textView.selectedRange
+        
+        var textString = textView.attributedString().string
+        let mutableString = NSMutableAttributedString(attributedString: textView.attributedString())
+        
+        for i in 0..<textString.characters.count {
+            
+            var color = NSColor(red: 73/255, green: 73/255, blue: 73/255, alpha: 1)
+            let character: String = textString[i]
+            
+            switch character {
+            case "+":
+                color = NSColor(red: 205/255, green: 245/255, blue: 96/255, alpha: 1)
+            case "-":
+                color = NSColor(red: 255/255, green: 101/255, blue: 31/255, alpha: 1)
+            case ">":
+                color = NSColor(red: 44/255, green: 111/255, blue: 144/255, alpha: 1)
+            case "<":
+                color = NSColor(red: 44/255, green: 111/255, blue: 144/255, alpha: 1)
+            case ".":
+                color = NSColor(red: 255/255, green: 100/255, blue: 40/255, alpha: 1)
+            case ",":
+                color = NSColor(red: 131/255, green: 110/255, blue: 115/255, alpha: 1)
+            case "[":
+                color = NSColor(red: 249/255, green: 247/255, blue: 227/255, alpha: 1)
+            case "]":
+                color = NSColor(red: 249/255, green: 247/255, blue: 227/255, alpha: 1)
+            default:
+                break
             }
+            
+            mutableString.addAttribute(NSForegroundColorAttributeName, value: color, range: NSRange(location: i, length: 1))
         }
+        
+        textView.textStorage?.setAttributedString(mutableString)
+        textView.setSelectedRange(selectedRange)
     }
     
     @IBAction func runButton(_ sender: AnyObject) {
@@ -83,7 +136,7 @@ class ViewController: NSViewController {
             case ".":
                 textLabel.string = textLabel.string! + "\(Character(UnicodeScalar(result[currentMemory])!))"
             case ",":
-                print("not available")
+                print(",")
             case ">":
                 currentMemory += 1
                 if result.count == currentMemory {
@@ -108,7 +161,7 @@ class ViewController: NSViewController {
                 }
                 break
             default:
-                print("Not a brainfuck character")
+                break
             }
             
             i += 1
@@ -134,7 +187,6 @@ class ViewController: NSViewController {
             }
         }
     }
-    
 }
 
 extension String {
